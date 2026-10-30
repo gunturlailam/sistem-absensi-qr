@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,6 +26,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/scan', [AttendanceController::class, 'scanPage'])->name('scan.index');
+    Route::post('/scan', [AttendanceController::class, 'scanPage'])->name('scan.process');
 });
 
 require __DIR__ . '/auth.php';
