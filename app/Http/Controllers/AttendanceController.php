@@ -22,10 +22,7 @@ class AttendanceController extends Controller
         $user = User::where('qr_code', $request->code)->first();
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'QR code tidak dikenali.'
-            ], 404);
+            return back()->with('scan_error', 'QR code tidak dikenali.');
         }
 
         $attendance = Attendance::firstOrNew([
@@ -33,34 +30,21 @@ class AttendanceController extends Controller
             'date' => now()->toDateString(),
         ]);
 
-        // Belum ada data hari ini = absen MASUK
         if (!$attendance->exists) {
             $attendance->time_in = now()->format('H:i:s');
             $attendance->status = 'hadir';
             $attendance->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'BERHASIL MASUK - ' . $user->name . ' pukul ' . now()->format('H:i:s'),
-            ]);
+            return back()->with('scan_success', 'BERHASIL MASUK - ' . $user->name . ' pukul ' . now()->format('H:i:s'));
         }
 
-
-        // Sudah masuk tapi belum pulang = absen PULANG
         if ($attendance->time_in && !$attendance->time_out) {
             $attendance->time_out = now()->format('H:i:s');
             $attendance->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'BERHASIL PULANG - ' . $user->name . ' pukul ' . now()->format('H:i:s'),
-            ]);
+            return back()->with('scan_success', 'BERHASIL PULANG - ' . $user->name . ' pukul ' . now()->format('H:i:s'));
         }
 
-        // Sudah masuk dan pulang hari ini
-        return response()->json([
-            'success' => false,
-            'message' => $user->name . ' sudah absen lengkap hari ini.',
-        ], 422);
+        return back()->with('scan_error', $user->name . ' sudah absen lengkap hari ini.');
     }
 }
